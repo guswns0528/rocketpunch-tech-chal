@@ -20,9 +20,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
+# TODO: 외부 파일로 이동
 SECRET_KEY = 'co#c)%9kt7ah%ra!17&#s)e&m%+tqe_d%e72syj2^d4^c1hq_7'
 
 # SECURITY WARNING: don't run with debug turned on in production!
+# TODO: 외부 파일 or 환경변수로 이동 
 DEBUG = True
 
 ALLOWED_HOSTS = []
@@ -69,7 +71,17 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'backend.wsgi.application'
+ASGI_APPLICATION = 'backend.routing.application'
+
+# TODO: 설정파일 분리?
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [('127.0.0.1', 6379)],
+        },
+    },
+}
 
 
 # Database

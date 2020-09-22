@@ -73,10 +73,25 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
+database_config = {}
+try:
+    with open('./.database_config', 'rt') as f:
+        import simplejson
+        try:
+            database_config = simplejson.load(f)
+        except simplejson.errors.JSONDecodeError:
+            pass
+except FileNotFoundError:
+    pass
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': database_config.get('db_name', 'test_db'),
+        'USER': database_config.get('db_user'),
+        'PASSWORD': database_config.get('db_pass'),
+        'HOST': database_config.get('db_host', 'localhost'),
+        'PORT': database_config.get('db_port', 3306)
     }
 }
 

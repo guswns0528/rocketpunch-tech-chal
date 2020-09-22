@@ -3,15 +3,15 @@ from .models import ChatRoom, Participant, Message
 
 
 class ChatRoomAdmin(admin.ModelAdmin):
-    pass
+    fields = []
 
 
 class ParticipantAdmin(admin.ModelAdmin):
-    pass
+    fields = ['room', 'user', 'last_read']
 
 
 class MessageAdmin(admin.ModelAdmin):
-    pass
+    fields = ['room', 'sender', 'content', 'created_at']
 
 
 admin.site.register(ChatRoom, ChatRoomAdmin)

@@ -19,12 +19,15 @@ class ChatRoom(models.Model):
     @classmethod
     def room_id_to_room_name(cls, room_id):
         return f'chat_{room_id}'
+
+    def __str__(self):
+        return ChatRoom.room_id_to_room_name(self.pk)
     
 
 class Participant(models.Model):
     room = models.ForeignKey(ChatRoom, on_delete=models.DO_NOTHING)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-    last_read = models.ForeignKey('Message', on_delete=models.DO_NOTHING, null=True)
+    last_read = models.ForeignKey('Message', on_delete=models.DO_NOTHING, null=True, blank=True)
 
     class Meta:
         indexes = [

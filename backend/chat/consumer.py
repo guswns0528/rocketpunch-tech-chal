@@ -1,5 +1,5 @@
 import simplejson
-from channels.generic.websocket import WebsocketConsumer
+from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from .models import Participant, Message, ChatRoom
 import asyncio
@@ -17,7 +17,7 @@ def store_message(user, room_id, content):
     return new_message
 
 
-class ChatConsumer(WebsocketConsumer):
+class ChatConsumer(AsyncWebsocketConsumer):
 
     async def connect(self):
 

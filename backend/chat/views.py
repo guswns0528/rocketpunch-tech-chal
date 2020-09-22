@@ -126,21 +126,25 @@ def list_chatrooms(request):
 @login_required
 def get_last_messages(request, chatroom_id):
     user = request.user
+    # FIXME: return json object with 404 when failed to find object.
     participant = get_object_or_404(
         Participant.objects.filter(user=user, room_id=chatroom_id)
     )
     messages = (Message.objects.select_related('sender')
         .filter(room_id=chatroom_id)
         .order_by('created_at')[-50:0])
-    return JsonResponse(
-        [message.to_dict(prev_readed=participant.last_read_id)
-            for message in messages]
-    )
+
+    # NOTE: Can I check a message readed with annotate method?
+    messages = [message.to_dict() for message in messages]
+    for message in messages:
+        message['readed'] = message['msg_id'] <= participant.last_read_id
+    return JsonResponse({'messages': messages})
 
 
 @login_required
 def get_messages_since(request, chatroom_id, since):
     user = request.user
+    # FIXME: return json object with 404 when failed to find object.
     participant = get_object_or_404(
         Participant.objects.filter(user=user, room_id=chatroom_id)
     )
@@ -148,17 +152,9 @@ def get_messages_since(request, chatroom_id, since):
         .filter(room_id=chatroom_id)
         .filter(pk__gt=since)
         .order_by('created_at')[-50:0])
-    return JsonResponse(
-        [message.to_dict(prev_readed=participant.last_read_id)
-            for message in messages]
-    )
 
-
-@login_required
-def send_message(request, chatroom_id, content):
-    import datetime
-
-    new_message = Message.objects.create(room_id=chatroom_id,
-        user=request.user,
-        content=content,
-        created_at=datetime.now())
+    # NOTE: Can I check a message readed with annotate method?
+    messages = [message.to_dict() for message in messages]
+    for message in messages:
+        message['readed'] = message['msg_id'] <= participant.last_read_id
+    return JsonResponse({'messages': messages})

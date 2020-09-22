@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 import simplejson
 
 
@@ -10,6 +11,14 @@ class ChatRoom(models.Model):
 
     def to_dict(self):
         return {'room_id': self.pk}
+
+    @classmethod
+    def create(cls):
+        return cls()
+
+    @classmethod
+    def room_id_to_room_name(cls, room_id):
+        return f'chat_{room_id}'
     
 
 class Participant(models.Model):
@@ -42,12 +51,20 @@ class Message(models.Model):
             models.Index(fields=['room', 'created_at'])
         ]
 
-    def to_dict(self, prev_readed=None):
+    @classmethod
+    def create(cls, user, room, content):
+        new_message = cls(
+            sender=user,
+            room=room,
+            content=content,
+            created_at=timezone.now()
+        )
+        return new_message
+
+    def to_dict(self):
         return {
             'msg_id': self.pk,
             'sender': self.sender.username,
             'content': self.content,
             'created_at': self.created_at,
-            'readed': prev_readed and self.pk <= prev_readed or False
         }
-

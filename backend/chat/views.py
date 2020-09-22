@@ -4,7 +4,7 @@ from django.contrib.auth import authenticate, login, logout
 from .models import ChatRoom
 
 
-def handle_method(method):
+def check_method(method):
     def decorator(view):
         import functools
 
@@ -20,7 +20,7 @@ def handle_method(method):
     return decorator
 
 
-def handle_post_parameter(name):
+def check_post_parameter(name):
     def decorator(view):
         import functools
 
@@ -51,9 +51,9 @@ def login_required(f):
     return wrapper
 
 
-@handle_method('POST')
-@handle_post_parameter('username')
-@handle_post_parameter('password')
+@check_method('POST')
+@check_post_parameter('username')
+@check_post_parameter('password')
 def login(request):
     username = request.POST['username']
     password = request.POST['password']
@@ -74,8 +74,8 @@ def logout(request):
 
 
 @login_required
-@handle_method('POST')
-@handle_post_parameter('other_user')
+@check_method('POST')
+@check_post_parameter('other_user_id')
 def create_chatroom(request):
     # channel_layer = get_channel_layer()
     # async_to_sync(channel_layer.group_add(~~~))
@@ -83,7 +83,7 @@ def create_chatroom(request):
 
 
 @login_required
-@handle_method('GET')
+@check_method('GET')
 def list_chatrooms(request):
     user = request.user
     rooms = Participant.objects.filter(user=user)

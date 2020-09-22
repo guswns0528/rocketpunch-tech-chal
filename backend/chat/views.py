@@ -1,7 +1,8 @@
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from django.contrib.auth import authenticate, login, logout
-from .models import ChatRoom
+from django.db import transaction
+from .models import ChatRoom, User, Participant, Message
 
 
 def check_method(method):
@@ -77,9 +78,41 @@ def logout(request):
 @check_method('POST')
 @check_post_parameter('other_user_id')
 def create_chatroom(request):
-    # channel_layer = get_channel_layer()
-    # async_to_sync(channel_layer.group_add(~~~))
-    pass
+    from channels.layers import get_channel_layer
+
+    # FIXME: this call can raises 404 error.
+    # when 404 is raised, django renders html page.
+    # In this backend project, all views are just json apis.
+    # I have to return json with 404 when I can't find other user
+    other_user = get_object_or_404(
+        User.object.get(pk=request.POST['other_user_id'])
+    )
+
+    try:
+        with transaction.atomic():
+            new_room = ChatRoom.create()
+            new_room.save()
+
+            participant = Participant(room=new_room, user=request.user)
+            participant.save()
+            other_participant = Participant(room=new_room, user=other_user)
+            other_participant.save()
+
+    except IntegrityError:
+        return JsonResponse({'msg': 'failed to create a chatroom'}, status=400)
+
+    channel_layer = get_channel_layer()
+    participants = [participant, other_participant]
+    for participant in participants:
+        # TODO: check channel exist
+        channel_name = None
+        group_add = async_to_sync(channel_layer.group_add)
+        group_add(
+            ChatRoom.room_id_to_room_name(new_room.pk),
+            channel_name
+        )
+
+    return JsonResponse({})
 
 
 @login_required

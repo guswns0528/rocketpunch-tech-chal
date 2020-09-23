@@ -102,15 +102,16 @@ def create_chatroom(request):
         return JsonResponse({'msg': 'failed to create a chatroom'}, status=400)
 
     channel_layer = get_channel_layer()
-    participants = [participant, other_participant]
-    for participant in participants:
-        # TODO: check channel exist
-        channel_name = None
-        group_add = async_to_sync(channel_layer.group_add)
-        group_add(
-            ChatRoom.room_id_to_room_name(new_room.pk),
-            channel_name
-        )
+    participants_user_id = [participant.user_id, other_participant.user_id]
+    for user_id in participants_user_id:
+        for connection in Connection.objects.filter(user_id=user_id):
+            # TODO: check channel exist
+            channel_name = connection.channel_name
+            group_add = async_to_sync(channel_layer.group_add)
+            group_add(
+                ChatRoom.room_id_to_room_name(new_room.pk),
+                channel_name
+            )
 
     return JsonResponse({})
 

@@ -1,7 +1,7 @@
 import simplejson
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
-from .models import Participant, Message, ChatRoom
+from .models import Participant, Message, ChatRoom, Connection
 import asyncio
 
 
@@ -17,6 +17,19 @@ def store_message(user, room_id, content):
     return new_message
 
 
+def create_connection(user, channel_name):
+    client = Connection(user=user, channel_name=channel_name)
+    client.save()
+    return client
+
+def delete_connection(connection_id):
+    try:
+        connection = Connection.objects.get(pk=connection_id)
+        connection.delete()
+    except:
+        pass
+
+
 class ChatConsumer(AsyncWebsocketConsumer):
 
     async def connect(self):
@@ -24,6 +37,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
         self.user = self.scope['user']
 
         participatedes = await database_sync_to_async(get_participated)()
+        connection = await database_sync_to_async(create_connection)(
+            user, channel_name
+        )
+        self.connection_id = connection.pk
 
         self.participated_rooms = [
             participated.room_id for participated in participatedes
@@ -41,6 +58,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.accept()
 
     async def disconnect(self):
+        # NOTE: sometimes, disconnect fail to run.
+        await database_sync_to_async(delete_connection)(self.connection_id)
         room_names = [
             ChatRoom.room_id_to_room_name(room)
             for room in self.participated_rooms

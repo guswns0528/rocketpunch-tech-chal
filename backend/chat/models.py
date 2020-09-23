@@ -71,3 +71,16 @@ class Message(models.Model):
             'content': self.content,
             'created_at': self.created_at,
         }
+
+
+class Connection(models.Model):
+    # NOTE: where to store channel name? memory cache? rdbms?
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    # NOTE: https://channels.readthedocs.io/en/latest/channel_layer_spec.html#channel-semantics
+    # Is 100 chars enough for channel name?
+    channel_name = models.CharField(max_length=100)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['user'])
+        ]

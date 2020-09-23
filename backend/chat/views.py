@@ -121,17 +121,27 @@ def create_chatroom(request):
             new_room = ChatRoom.create()
             new_room.save()
 
-            participant = Participant(room=new_room, user=request.user)
+            participant = Participant(
+                room=new_room,
+                user=request.user,
+                room_name=other_user.username
+            )
             participant.save()
-            other_participant = Participant(room=new_room, user=other_user)
+            other_participant = Participant(
+                room=new_room,
+                user=other_user,
+                room_name=user.username
+            )
             other_participant.save()
 
     except IntegrityError:
         return JsonResponse({'msg': 'failed to create a chatroom'}, status=400)
 
     channel_layer = get_channel_layer()
-    participants_user_id = [participant.user_id, other_participant.user_id]
-    for user_id in participants_user_id:
+    # NOTE: maybe move to worker.
+    participants_user_id = [participant, other_participant]
+    for participant in participants:
+        user_id = participant.user_id
         for connection in Connection.objects.filter(user_id=user_id):
             # TODO: check channel exist
             channel_name = connection.channel_name
@@ -140,8 +150,18 @@ def create_chatroom(request):
                 ChatRoom.room_id_to_room_name(new_room.pk),
                 channel_name
             )
+    # NOTE: send ws message only the conversation partner.
+    # Is this reasonable?
+    # Or, just send a 200 resp and send join ws messages to user?
+    for connection in Connection.object.filter(user_id=other_participant.user_id):
+        send = async_to_sync(channel_layer.send)
+        send(channel_name, {
+            'type': 'JOIN',
+            'roomId': other_participant.room_id,
+            'name': other_participant.room_name
+        })
 
-    return JsonResponse({'room_id': new_room.pk})
+    return JsonResponse({'roomId': new_room.pk, 'name': participant.name})
 
 
 @csrf_exempt

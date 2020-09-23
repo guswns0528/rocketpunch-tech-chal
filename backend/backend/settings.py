@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
 from pathlib import Path
+from backend import override_settings
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -87,28 +88,7 @@ CHANNEL_LAYERS = {
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
-database_config = {}
-try:
-    with open('./.database_config', 'rt') as f:
-        import simplejson
-        try:
-            database_config = simplejson.load(f)
-        except simplejson.errors.JSONDecodeError:
-            pass
-except FileNotFoundError:
-    pass
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': database_config.get('db_name', 'test_db'),
-        'USER': database_config.get('db_user'),
-        'PASSWORD': database_config.get('db_pass'),
-        'HOST': database_config.get('db_host', 'localhost'),
-        'PORT': database_config.get('db_port', 3306)
-    }
-}
-
+DATABASES = override_settings.DATABASES
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators

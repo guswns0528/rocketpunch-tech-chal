@@ -87,7 +87,7 @@ def login(request):
         # FIXME: jwt tokens cannot be revoked.
 
         token = jwt.encode({'user_id': user.pk}, SECRET_KEY, algorithm='HS256').decode('ascii')
-        return JsonResponse({'api_token': token})
+        return JsonResponse({'apiToken': token})
     else:
         return JsonResponse(
             {'msg': 'User dose not exist.'},
@@ -149,7 +149,14 @@ def create_chatroom(request):
 @check_method('GET')
 def list_chatrooms(request):
     user = request.user
-    rooms = Participant.objects.filter(user=user)
+    participants = Participant.objects.filter(user=user)
+    rooms = [
+        {
+            'roomId': participant.room_id,
+            'name': participant.room_name
+        }
+        for participant in participants
+    ]
     return JsonResponse({'rooms': rooms})
 
 
@@ -206,4 +213,4 @@ def message_read(request, chatroom_id, message_id):
     participant.last_read = Message.objects.get(pk=message_id)
     participant.save()
 
-    return JsonResponse({'last_read': participant.last_read_id})
+    return JsonResponse({'lastRead': participant.last_read_id})

@@ -8,7 +8,7 @@ from chat.views import (
 urlpatterns = [
     path('api/login/', login),
     path('api/logout/', logout),
-    path('api/chatlist/', list_chatrooms),
+    path('api/rooms/', list_chatrooms),
     path('api/chat/<int:chatroom_id>/', get_last_messages),
     path('api/chat_before/<int:chatroom_id>/', get_messages_before),
     path('api/new_chat/', create_chatroom),

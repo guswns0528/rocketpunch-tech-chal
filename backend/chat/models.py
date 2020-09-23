@@ -10,7 +10,7 @@ User = get_user_model()
 class ChatRoom(models.Model):
 
     def to_dict(self):
-        return {'room_id': self.pk}
+        return {'roomId': self.pk}
 
     @classmethod
     def create(cls):
@@ -41,7 +41,7 @@ class Participant(models.Model):
         ]
 
     def to_dict(self):
-        return {'room_id': self.room_id}
+        return {'roomId': self.room_id}
 
 
 class Message(models.Model):
@@ -67,10 +67,10 @@ class Message(models.Model):
 
     def to_dict(self):
         return {
-            'msg_id': self.pk,
+            'msgId': self.pk,
             'sender': self.sender.username,
             'content': self.content,
-            'created_at': self.created_at,
+            'createdAt': self.created_at.isoformat(),
         }
 
 

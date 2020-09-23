@@ -78,7 +78,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, data):
         # NOTE: Do I need to handle leaving a chat room?
         data = simplejson.loads(data)
-        room_id = data['room_id']
+        room_id = data['roomId']
         content = data['content']
 
         new_message = await store_message(user, room_id, content)
@@ -87,18 +87,21 @@ class ChatConsumer(AsyncWebsocketConsumer):
             ChatRoom.room_id_to_room_name(room_id),
             {
                 'type': 'handle_message',
-                # FIXME
-                'message': new_message.to_dict(new_message.pk - 1),
+                'message': new_message.to_dict(),
             }
         )
 
     async def handle_message(self, event):
         new_message = event['message']
-        await self.send(new_message)
+        await self.send(simplejson.dumps({
+            'type': 'MSG',
+            **new_message
+        }))
 
     async def join(self, event):
         join_msg = {
             'type': 'JOIN',
-            'msg': event['message']
+            'roomId': event['roomId'],
+            'name': event['name']
         }
         await self.send(simplejson.dumps(join_msg))

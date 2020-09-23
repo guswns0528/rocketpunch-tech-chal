@@ -5,6 +5,10 @@ from django.db import transaction
 from django.views.decorators.csrf import csrf_exempt
 from .models import ChatRoom, User, Participant, Message
 
+import jwt
+
+from backend.settings import SECRET_KEY
+
 
 def check_method(method):
     def decorator(view):
@@ -44,12 +48,29 @@ def login_required(f):
 
     @functools.wraps(f)
     def wrapper(request, *args, **kwargs):
-        if request.user.is_authenticated:
-            return f(request, *args, **kwargs)
-        else:
-            return JsonResponse({
-                'msg': 'Login needed.'},
-                status=400)
+        try:
+            api_token = request.headers.get('Authorization', None)
+            payload = jwt.decode(api_token, SECRET_KEY, algorithm='HS256')
+            user = User.object.get(pk=payload['user_id'])
+            request.user = user
+
+        except jwt.exceptions.DecodeError:
+            return JsonResponse(
+                {
+                    'msg': 'invalid token'
+                },
+                status=400
+            )
+
+        except User.DoesNotExist:
+            return JsonResponse(
+                {
+                    'msg': 'invalid user'
+                },
+                status=400
+            )
+
+        return f(request, *args, **kwargs)
     return wrapper
 
 
@@ -62,8 +83,11 @@ def login(request):
     password = request.POST['password']
     user = authenticate(username=username, password=password)
     if user is not None:
-        login(request, user)
-        return JsonResponse({'msg': 'ok'})
+        # FIXME: set expiration date.
+        # FIXME: jwt tokens cannot be revoked.
+
+        token = jwt.encode({'user_id': user.pk}, SECRET_KEY, algorithm='HS256').decode('ascii')
+        return JsonResponse({'api_token': token})
     else:
         return JsonResponse(
             {'msg': 'User dose not exist.'},
@@ -73,7 +97,7 @@ def login(request):
 @csrf_exempt
 @login_required
 def logout(request):
-    logout(request)
+    # FIXME: revoke api token.
     return JsonResponse({'msg': 'ok'})
 
 

@@ -28,6 +28,7 @@ class Participant(models.Model):
     room = models.ForeignKey(ChatRoom, on_delete=models.DO_NOTHING)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     last_read = models.ForeignKey('Message', on_delete=models.DO_NOTHING, null=True, blank=True)
+    room_name = models.CharField(max_length=150, null=True)
 
     class Meta:
         indexes = [

@@ -113,7 +113,7 @@ def create_chatroom(request):
                 channel_name
             )
 
-    return JsonResponse({})
+    return JsonResponse({'room_id': new_room.pk})
 
 
 @login_required
@@ -160,3 +160,18 @@ def get_messages_before(request, chatroom_id, since):
         message['readed'] = message['msg_id'] <= participant.last_read_id
 
     return JsonResponse({'messages': messages})
+
+
+@login_required
+@check_method('POST')
+def message_read(request, chatroom_id, message_id):
+    user = request.user
+    participant = get_object_or_404(
+        Participant.object.filter(user=user, room_id=chatroom_id)
+    )
+
+    # FIXME: check a requested message is newer than stored in db.
+    participant.last_read = Message.objects.get(pk=message_id)
+    participant.save()
+
+    return JsonResponse({'last_read': participant.last_read_id})

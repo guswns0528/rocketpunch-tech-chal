@@ -143,7 +143,7 @@ def get_last_messages(request, chatroom_id):
 
 
 @login_required
-def get_messages_since(request, chatroom_id, since):
+def get_messages_before(request, chatroom_id, since):
     user = request.user
     # FIXME: return json object with 404 when failed to find object.
     participant = get_object_or_404(
@@ -158,4 +158,5 @@ def get_messages_since(request, chatroom_id, since):
     messages = [message.to_dict() for message in messages]
     for message in messages:
         message['readed'] = message['msg_id'] <= participant.last_read_id
+
     return JsonResponse({'messages': messages})

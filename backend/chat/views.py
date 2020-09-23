@@ -2,6 +2,7 @@ from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from django.contrib.auth import authenticate, login, logout
 from django.db import transaction
+from django.views.decorators.csrf import csrf_exempt
 from .models import ChatRoom, User, Participant, Message
 
 
@@ -52,6 +53,7 @@ def login_required(f):
     return wrapper
 
 
+@csrf_exempt
 @check_method('POST')
 @check_post_parameter('username')
 @check_post_parameter('password')
@@ -68,12 +70,14 @@ def login(request):
             status=404)
 
 
+@csrf_exempt
 @login_required
 def logout(request):
     logout(request)
     return JsonResponse({'msg': 'ok'})
 
 
+@csrf_exempt
 @login_required
 @check_method('POST')
 @check_post_parameter('other_user_id')
@@ -116,6 +120,7 @@ def create_chatroom(request):
     return JsonResponse({'room_id': new_room.pk})
 
 
+@csrf_exempt
 @login_required
 @check_method('GET')
 def list_chatrooms(request):
@@ -124,6 +129,7 @@ def list_chatrooms(request):
     return JsonResponse({'rooms': rooms})
 
 
+@csrf_exempt
 @login_required
 def get_last_messages(request, chatroom_id):
     user = request.user
@@ -142,6 +148,7 @@ def get_last_messages(request, chatroom_id):
     return JsonResponse({'messages': messages})
 
 
+@csrf_exempt
 @login_required
 def get_messages_before(request, chatroom_id, since):
     user = request.user
@@ -162,6 +169,7 @@ def get_messages_before(request, chatroom_id, since):
     return JsonResponse({'messages': messages})
 
 
+@csrf_exempt
 @login_required
 @check_method('POST')
 def message_read(request, chatroom_id, message_id):

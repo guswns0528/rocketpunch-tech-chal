@@ -95,3 +95,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def handle_message(self, event):
         new_message = event['message']
         await self.send(new_message)
+
+    async def join(self, event):
+        join_msg = {
+            'type': 'JOIN',
+            'msg': event['message']
+        }
+        await self.send(simplejson.dumps(join_msg))

@@ -5,10 +5,13 @@ from .models import Participant, Message, ChatRoom, Connection
 import asyncio
 
 
+@database_sync_to_async
 def get_participated(user):
-    return Participant.objects.filter(user=user).all()
+    records = Participant.objects.filter(user=user).all()
+    return [participated.room_id for participated in records]
 
 
+@database_sync_to_async
 def store_message(user, room_id, content):
     # FIXME: handle invalid room_id
     room = ChatRoom.objects.get(pk=room_id)
@@ -17,11 +20,14 @@ def store_message(user, room_id, content):
     return new_message
 
 
+@database_sync_to_async
 def create_connection(user, channel_name):
     client = Connection(user=user, channel_name=channel_name)
     client.save()
     return client
 
+
+@database_sync_to_async
 def delete_connection(connection_id):
     try:
         connection = Connection.objects.get(pk=connection_id)
@@ -33,18 +39,14 @@ def delete_connection(connection_id):
 class ChatConsumer(AsyncWebsocketConsumer):
 
     async def connect(self):
+        user = self.scope['user']
+        if user.is_anonymous:
+            await self.close()
+            return
 
-        self.user = self.scope['user']
-
-        participatedes = await database_sync_to_async(get_participated)()
-        connection = await database_sync_to_async(create_connection)(
-            user, channel_name
-        )
+        connection = await create_connection(user, self.channel_name)
+        self.participated_rooms = await get_participated(user)
         self.connection_id = connection.pk
-
-        self.participated_rooms = [
-            participated.room_id for participated in participatedes
-        ]
 
         room_names = [
             ChatRoom.room_id_to_room_name(room)
@@ -57,9 +59,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         await self.accept()
 
-    async def disconnect(self):
+    async def disconnect(self, code):
+        user = self.scope['user']
+        if user.is_anonymous:
+            return
+
         # NOTE: sometimes, disconnect fail to run.
-        await database_sync_to_async(delete_connection)(self.connection_id)
+        await delete_connection(self.connection_id)
         room_names = [
             ChatRoom.room_id_to_room_name(room)
             for room in self.participated_rooms
@@ -75,11 +81,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         room_id = data['room_id']
         content = data['content']
 
-        new_message = await database_sync_to_async(store_message)(
-            user,
-            room_id,
-            content
-        )
+        new_message = await store_message(user, room_id, content)
 
         await self.channel_layer.group_send(
             ChatRoom.room_id_to_room_name(room_id),

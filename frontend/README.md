@@ -6,6 +6,9 @@ Chat view는 ChatRoom과 RoomList 2개의 component로 구성.
 ChatRoom은 실제 1:1 대화를 보여주는 component.
 RoomList는 1:1 대화 목록 component.
 
+login 요청 보낸후 발급받은 jwt localStorage에 넣어두고 다른 api요청시 사용
+채팅 메세지는 websocket을 사용해서 주고 받음.
+
 ## Project setup
 ```
 yarn install

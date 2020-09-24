@@ -13,9 +13,9 @@
     </div>
     <div class="chatroom-input">
       <form v-on:submit.prevent="sendChat">
-        <textarea v-model=chatInput placeholder="내용을 작성해주세요."></textarea>
+        <textarea v-model=chatInput placeholder="내용을 작성해주세요." :disabled="!isValid"></textarea>
         <div>
-          <input class="button" type="submit" value="보내기">
+          <input class="button" type="submit" value="보내기" :disabled="!isValid">
         </div>
       </form>
     </div>
@@ -77,6 +77,9 @@
   border-radius: 15px;
 }
 
+.button:disabled {
+  background-color: #555555;
+}
 
 </style>
 
@@ -120,6 +123,7 @@ export default Vue.extend({
   },
 
   watch: {
+    // NOTE: this is a adhoc.
     room(_newVal, _oldVal) {
       this.chatInput = '';
     }

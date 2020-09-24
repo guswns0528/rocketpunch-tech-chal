@@ -10,7 +10,7 @@ urlpatterns = [
     path('api/logout/', logout),
     path('api/rooms/', list_chatrooms),
     path('api/chat/<int:chatroom_id>/', get_last_messages),
-    path('api/chat_before/<int:chatroom_id>/', get_messages_before),
+    path('api/chat_before/<int:chatroom_id>/<int:message_id>/', get_messages_before),
     path('api/new_chat/', create_chatroom),
     path('api/message_read/<int:chatroom_id>/<int:message_id>/', message_read),
 

@@ -194,7 +194,7 @@ def get_last_messages(request, chatroom_id):
         .filter(room_id=chatroom_id)
         .order_by('-created_at')[0:50][::-1])
 
-    # NOTE: Can I check a message readed with annotate method?
+    # TODO: check readed in frontend with participant.last_read.
     messages = [message.to_dict() for message in messages]
     if participant.last_read_id:
         for message in messages:
@@ -207,7 +207,7 @@ def get_last_messages(request, chatroom_id):
 
 @csrf_exempt
 @login_required
-def get_messages_before(request, chatroom_id, since):
+def get_messages_before(request, chatroom_id, message_id):
     user = request.user
     # FIXME: return json object with 404 when failed to find object.
     participant = get_object_or_404(
@@ -215,10 +215,10 @@ def get_messages_before(request, chatroom_id, since):
     )
     messages = (Message.objects.select_related('sender')
         .filter(room_id=chatroom_id)
-        .filter(pk__gt=since)
-        .order_by('created_at')[-50:0])
+        .filter(id__lt=message_id)
+        .order_by('-created_at')[0:50][::-1])
 
-    # NOTE: Can I check a message readed with annotate method?
+    # TODO: check readed in frontend with participant.last_read.
     messages = [message.to_dict() for message in messages]
     if participant.last_read_id:
         for message in messages:

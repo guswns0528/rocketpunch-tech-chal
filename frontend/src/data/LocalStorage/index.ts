@@ -6,7 +6,11 @@ export default class LocalStorage {
   }
 
   get(key: string): any {
-    return localStorage.getItem(key);
+    const item = localStorage.getItem(key);
+    if (item === null) {
+      throw new Error('key does not exist.') 
+    }
+    return JSON.parse(item);
   }
 
   has(key: string): boolean {

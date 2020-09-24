@@ -79,6 +79,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         # NOTE: Do I need to handle leaving a chat room?
         data = simplejson.loads(data)
         room_id = data['roomId']
+        # TODO: sanitize content.
         content = data['content']
 
         new_message = await store_message(user, room_id, content)

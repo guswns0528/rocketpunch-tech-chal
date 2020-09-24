@@ -7,7 +7,7 @@ class ChatRoomAdmin(admin.ModelAdmin):
 
 
 class ParticipantAdmin(admin.ModelAdmin):
-    fields = ['room', 'user', 'last_read']
+    fields = ['room', 'user', 'room_name', 'last_read']
 
 
 class MessageAdmin(admin.ModelAdmin):

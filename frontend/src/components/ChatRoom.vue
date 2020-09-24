@@ -110,10 +110,10 @@ export default Vue.extend({
 
   methods: {
     sendChat(ev: Event) {
-      console.log(this.chatInput);
-      console.log(this.room);
+      if (this.room === undefined)
+        return;
+      this.$emit("send-chat", this.room.roomId, this.chatInput);
       this.chatInput = '';
-      return;
     },
 
     dateToString(date: Date): string {

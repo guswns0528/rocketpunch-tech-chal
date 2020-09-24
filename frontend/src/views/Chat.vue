@@ -11,7 +11,7 @@
     </div>
     <div id="chat-content">
       <RoomList @enter-room="enterRoom" v-bind:rooms="this.rooms" />
-      <ChatRoom v-bind:room="getRoom(currentRoomId)" />
+      <ChatRoom @send-chat="sendChat" v-bind:room="getRoom(currentRoomId)" />
     </div>
   </div>
 </template>
@@ -70,6 +70,7 @@ button {
 
 <script lang="ts">
 import Vue from 'vue';
+import LocalStorage from '../data/LocalStorage';
 import {Room, Message} from '../data';
 import {rooms as roomsApi, lastMessages as messageApi} from '../api';
 
@@ -102,7 +103,6 @@ export default Vue.extend({
       }
 
       rooms = result.rooms;
-      console.log(rooms);
       const promises: Promise<Message[]>[] = [];
 
       for (let i = 0; i < rooms.length; i++) {
@@ -124,8 +124,15 @@ export default Vue.extend({
       this.rooms = rooms;
 
       // TODO: seperate ws code form component.
-      this.ws = new WebSocket(process.env.VUE_APP_WS_BASE + "/chat/");
-      this.ws.onmessage = (ev) => {
+      const ws = new WebSocket(`${process.env.VUE_APP_WS_BASE}/chat/`);
+      this.ws = ws;
+      ws.onopen = (ev) => {
+        ws.send(JSON.stringify({
+          type: 'auth',
+          apiToken: new LocalStorage().get('apiToken')}
+        ));
+      };
+      ws.onmessage = (ev) => {
         const data = JSON.parse(ev.data);
         switch (data.type) {
           case 'JOIN': {
@@ -134,9 +141,13 @@ export default Vue.extend({
           break;
 
           case 'MSG': {
+            const message = data.message;
             const roomId = data.roomId;
-            const chat = this.rooms[roomId]; // find chat by roomId;
-            chat.messages.push(data.message);
+            const chat = this.getRoom(roomId);
+            if (chat === undefined)
+              return;
+            message.createdAt = new Date(message.createdAt);
+            chat.messages.push(message);
           }
           break;
         }
@@ -149,14 +160,9 @@ export default Vue.extend({
     ws.close();
   },
 
-  computed: {
-  },
-
   methods: {
     enterRoom(room: Room) {
-      console.log(room);
       this.currentRoomId = room.roomId;
-      console.log(this.currentRoomId);
     },
 
     getRoom(roomId: number) {
@@ -168,6 +174,14 @@ export default Vue.extend({
       if (room === undefined)
         return '';
       return room.name;
+    },
+
+    sendChat(roomId: number, content: string) {
+      const ws = this.ws;
+      if (ws === undefined)
+        return;
+
+      ws.send(JSON.stringify({roomId, content}));
     }
   },
 

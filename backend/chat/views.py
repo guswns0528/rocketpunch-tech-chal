@@ -43,32 +43,33 @@ def check_post_parameter(name):
     return decorator
 
 
+def error_with_json(msg, status):
+    return JsonResponse({
+        'msg': msg
+    }, status=status)
+
+
 def login_required(f):
     import functools
 
     @functools.wraps(f)
     def wrapper(request, *args, **kwargs):
         try:
-            api_token = request.headers.get('Authorization', None)
+            auth = request.headers.get('Authorization', None)
+            if auth is None:
+                return error_with_json('Authorization header not available', 400)
+            token_type, api_token = auth.split()
+            if token_type != 'Bearer':
+                return error_with_json('invalid Authorization type', 400)
             payload = jwt.decode(api_token, SECRET_KEY, algorithm='HS256')
             user = User.objects.get(pk=payload['user_id'])
             request.user = user
 
         except jwt.exceptions.DecodeError:
-            return JsonResponse(
-                {
-                    'msg': 'invalid token'
-                },
-                status=400
-            )
+            return error_with_json('invalid token', 400)
 
         except User.DoesNotExist:
-            return JsonResponse(
-                {
-                    'msg': 'invalid user'
-                },
-                status=400
-            )
+            return error_with_json('invalid user', 400)
 
         return f(request, *args, **kwargs)
     return wrapper
@@ -170,6 +171,7 @@ def create_chatroom(request):
 def list_chatrooms(request):
     user = request.user
     participants = Participant.objects.filter(user=user)
+    # TODO: sort by when last message created.
     rooms = [
         {
             'roomId': participant.room_id,
@@ -190,12 +192,16 @@ def get_last_messages(request, chatroom_id):
     )
     messages = (Message.objects.select_related('sender')
         .filter(room_id=chatroom_id)
-        .order_by('created_at')[-50:0])
+        .order_by('-created_at')[0:50][::-1])
 
     # NOTE: Can I check a message readed with annotate method?
     messages = [message.to_dict() for message in messages]
-    for message in messages:
-        message['readed'] = message['msg_id'] <= participant.last_read_id
+    if participant.last_read_id:
+        for message in messages:
+            message['readed'] = message['messageId'] <= participant.last_read_id
+    else:
+        for message in messages:
+            message['readed'] = False
     return JsonResponse({'messages': messages})
 
 
@@ -214,9 +220,12 @@ def get_messages_before(request, chatroom_id, since):
 
     # NOTE: Can I check a message readed with annotate method?
     messages = [message.to_dict() for message in messages]
-    for message in messages:
-        message['readed'] = message['msg_id'] <= participant.last_read_id
-
+    if participant.last_read_id:
+        for message in messages:
+            message['readed'] = message['messageId'] <= participant.last_read_id
+    else:
+        for message in messages:
+            message['readed'] = False
     return JsonResponse({'messages': messages})
 
 

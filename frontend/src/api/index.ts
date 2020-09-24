@@ -1,3 +1,5 @@
-import {login, LoginResult} from './login'
+import {login} from './login'
+import {rooms} from './rooms'
+import {lastMessages} from './messages'
 
-export {login, LoginResult};
+export {login, rooms, lastMessages};

@@ -1,6 +1,6 @@
 import {post} from './common';
 
-export interface LoginResult {
+interface LoginResult {
   apiToken: string;
 }
 
@@ -17,9 +17,9 @@ export async function login(
     const data = new FormData();
     data.append('username', username);
     data.append('password', password);
-    const token = await post<{api_token: string}, LoginBody>('/api/login/', data);
+    const token = await post<LoginResult, LoginBody>('/api/login/', data);
 
-    return {apiToken: token.jsonBody.api_token};
+    return token.jsonBody;
   }
   catch (ex) {
     console.log(ex);

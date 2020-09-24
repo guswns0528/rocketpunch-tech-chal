@@ -4,6 +4,7 @@ interface Resp<T> extends Response {
   jsonBody: T;
 }
 
+// NOTE: return type doens't give any guarantees that body is matched with return type, it's just assertion.
 export async function apiCall<T>(req: RequestInfo): Promise<Resp<T>> {
   const resp: Response = await fetch(req);
   const parsed = await resp.json();

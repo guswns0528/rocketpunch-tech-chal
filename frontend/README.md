@@ -9,6 +9,14 @@ RoomList는 1:1 대화 목록 component.
 login 요청 보낸후 발급받은 jwt localStorage에 넣어두고 다른 api요청시 사용
 채팅 메세지는 websocket을 사용해서 주고 받음.
 
+## deploy
+- .env.local에 api base, ws base설정
+  - VUE_APP_API_BASE
+  - VUE_APP_WS_BASE
+- yarn build
+- nginx로 static file serve
+  - vue-router에서 history mode쓰니까 index아닌경우에도 index.html내려줘야함
+
 ## Project setup
 ```
 yarn install

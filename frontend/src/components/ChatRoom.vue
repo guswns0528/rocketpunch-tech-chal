@@ -1,7 +1,7 @@
 <template>
   <div class="chatroom-wrapper">
     <div class="chatroom-view">
-      <div v-if="isValid" class="chatroom-messages">
+      <div v-if="isValid" class="chatroom-messages" ref="messages" @scroll="messagesScroll">
         <div v-for="message in room.messages" v-bind:key="message.messageId" class="message">
           <span class="message-sender">{{message.sender}}</span>
           <p class="message-content">
@@ -92,8 +92,19 @@ import {dateToPresentationString} from '../util/date';
 export default Vue.extend({
   data() {
     return {
-      chatInput: ''
+      chatInput: '',
+      needScroll: false
     }
+  },
+
+  updated() {
+    this.$nextTick(() => {
+      if (this.needScroll) {
+        const messages = this.$refs.messages as Element;
+        messages.scrollTop = messages.scrollHeight;
+        this.needScroll = false;
+      }
+    });
   },
 
   props: {
@@ -119,12 +130,28 @@ export default Vue.extend({
     dateToString(date: Date): string {
       // FIXME: this is not reactive.
       return dateToPresentationString(date, new Date());
+    },
+
+    messagesScroll(ev: Event) {
+      if (this.room === undefined)
+        return;
+
+      if (ev.target === null)
+        return;
+
+      const target = ev.target as Element;
+      const {scrollTop} = target;
+      const isTop = scrollTop === 0;
+      if (isTop) {
+        this.$emit("load-chat", this.room.roomId);
+      }
     }
   },
 
   watch: {
-    // NOTE: this is a adhoc.
+    // NOTE: this is an adhoc.
     room(_newVal, _oldVal) {
+      this.needScroll = true;
       this.chatInput = '';
     }
   }

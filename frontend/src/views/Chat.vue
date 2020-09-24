@@ -11,7 +11,7 @@
     </div>
     <div id="chat-content">
       <RoomList @enter-room="enterRoom" v-bind:rooms="this.rooms" />
-      <ChatRoom @send-chat="sendChat" v-bind:room="getRoom(currentRoomId)" />
+      <ChatRoom @send-chat="sendChat" @load-chat="loadChat" v-bind:room="getRoom(currentRoomId)" />
     </div>
   </div>
 </template>
@@ -72,7 +72,7 @@ button {
 import Vue from 'vue';
 import LocalStorage from '../data/LocalStorage';
 import {Room, Message} from '../data';
-import {rooms as roomsApi, lastMessages as messageApi} from '../api';
+import {rooms as roomsApi, lastMessages as messageApi, messagesBefore} from '../api';
 
 import RoomList from '../components/RoomList.vue';
 import ChatRoom from '../components/ChatRoom.vue';
@@ -182,6 +182,24 @@ export default Vue.extend({
         return;
 
       ws.send(JSON.stringify({roomId, content}));
+    },
+
+    loadChat(roomId: number) {
+      const room = this.getRoom(roomId);
+      if (room === undefined)
+        return;
+
+      if (room.messages.length === 0)
+        return;
+
+      const firstMessage = room.messages[0];
+      messagesBefore(roomId, firstMessage.messageId).then(result => {
+        if (result === undefined) {
+          throw new Error("failed to fetch data.");
+        }
+        const messages: Message[] = result.messages;
+        room.messages = [...messages, ...room.messages];
+      });
     }
   },
 

@@ -2,7 +2,7 @@ interface Message {
   messageId: number
   sender: string
   content: string
-  createdAt: string
+  createdAt: Date
 };
 
 export default Message;

@@ -51,7 +51,7 @@ def login_required(f):
         try:
             api_token = request.headers.get('Authorization', None)
             payload = jwt.decode(api_token, SECRET_KEY, algorithm='HS256')
-            user = User.object.get(pk=payload['user_id'])
+            user = User.objects.get(pk=payload['user_id'])
             request.user = user
 
         except jwt.exceptions.DecodeError:
@@ -113,7 +113,7 @@ def create_chatroom(request):
     # In this backend project, all views are just json apis.
     # I have to return json with 404 when I can't find other user
     other_user = get_object_or_404(
-        User.object.get(pk=request.POST['other_user_id'])
+        User.objects.get(pk=request.POST['other_user_id'])
     )
 
     try:
@@ -153,7 +153,7 @@ def create_chatroom(request):
     # NOTE: send ws message only the conversation partner.
     # Is this reasonable?
     # Or, just send a 200 resp and send join ws messages to user?
-    for connection in Connection.object.filter(user_id=other_participant.user_id):
+    for connection in Connection.objects.filter(user_id=other_participant.user_id):
         send = async_to_sync(channel_layer.send)
         send(channel_name, {
             'type': 'JOIN',
@@ -226,7 +226,7 @@ def get_messages_before(request, chatroom_id, since):
 def message_read(request, chatroom_id, message_id):
     user = request.user
     participant = get_object_or_404(
-        Participant.object.filter(user=user, room_id=chatroom_id)
+        Participant.objects.filter(user=user, room_id=chatroom_id)
     )
 
     # FIXME: check a requested message is newer than stored in db.

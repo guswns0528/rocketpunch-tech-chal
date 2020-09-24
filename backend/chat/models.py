@@ -67,7 +67,7 @@ class Message(models.Model):
 
     def to_dict(self):
         return {
-            'msgId': self.pk,
+            'messageId': self.pk,
             'sender': self.sender.username,
             'content': self.content,
             'createdAt': self.created_at.isoformat(),

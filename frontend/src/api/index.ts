@@ -1,5 +1,5 @@
 import {login} from './login'
 import {rooms} from './rooms'
-import {lastMessages} from './messages'
+import {lastMessages, messagesBefore} from './messages'
 
-export {login, rooms, lastMessages};
+export {login, rooms, lastMessages, messagesBefore};

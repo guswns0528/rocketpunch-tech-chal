@@ -14,6 +14,6 @@ export default class LocalStorage {
   }
 
   has(key: string): boolean {
-    return this.get(key) !== null;
+    return localStorage.getItem(key) !== null;
   }
 }
